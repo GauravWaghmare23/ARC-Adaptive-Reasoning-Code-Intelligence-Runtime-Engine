@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/authClient";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,10 @@ import { DashboardNavbar } from "@/components/dashboard/dashboard-navbar";
 import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
-  const { data: session, isPending } = authClient.useSession();
+  const router = useRouter();
+
+  const { data: session, isPending } =
+    authClient.useSession();
 
   // Loading state
   if (isPending) {
@@ -86,10 +89,11 @@ export default function DashboardPage() {
 
             <Button
               className={cn("mt-6", "w-full")}
+              onClick={() => {
+                router.replace("/sign-in");
+              }}
             >
-              <Link href="/sign-in">
-                Go to Sign In
-              </Link>
+              Go to Sign In
             </Button>
           </CardContent>
         </Card>
@@ -118,7 +122,7 @@ export default function DashboardPage() {
         )}
       >
         {/* Welcome */}
-        <div className={cn("mb-10")}>
+        <div className="mb-10">
           <p
             className={cn(
               "text-sm",
@@ -326,6 +330,9 @@ export default function DashboardPage() {
 
               <Button
                 className={cn("mt-4", "w-full")}
+                onClick={() => {
+                  router.push("/workspace");
+                }}
               >
                 Open ARC
               </Button>
@@ -464,7 +471,12 @@ export default function DashboardPage() {
                 workflow with your AI assistant.
               </p>
 
-              <Button className="mt-4">
+              <Button
+                className="mt-4"
+                onClick={() => {
+                  router.push("/workspace");
+                }}
+              >
                 Get Started
               </Button>
             </CardContent>
@@ -493,10 +505,11 @@ export default function DashboardPage() {
               <Button
                 variant="outline"
                 className="mt-4"
+                onClick={() => {
+                  router.push("/docs");
+                }}
               >
-                <Link href="/docs">
-                  View Documentation
-                </Link>
+                View Documentation
               </Button>
             </CardContent>
           </Card>
