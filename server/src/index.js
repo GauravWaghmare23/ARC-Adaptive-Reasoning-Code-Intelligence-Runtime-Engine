@@ -29,10 +29,15 @@ app.get("/api/me", async(req,res)=>{
     headers: fromNodeHeaders(req.headers),
   });
   return res.json(session);
+});
+
+app.get("/device", async(req,res)=>{
+  const {user_code} = req.query;
+  res.redirect(`http://localhost:3000/device?user_code=${user_code}`);
 })
 
 // Health check
-app.get("/health", (req, res) => {
+app.get("/health", async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Server is healthy",
