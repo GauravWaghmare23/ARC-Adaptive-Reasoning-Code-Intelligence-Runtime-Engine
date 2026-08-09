@@ -1,30 +1,52 @@
 "use client";
 
+import Link from "next/link";
 import { authClient } from "@/lib/authClient";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "../../../lib/utils";
+import { DashboardNavbar } from "@/components/dashboard/dashboard-navbar";
+import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { data: session, isPending } = authClient.useSession();
 
-  const handleLogout = async () => {
-    try {
-      await authClient.signOut();
-
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
-
+  // Loading state
   if (isPending) {
     return (
-      <main className={cn('flex', 'min-h-screen', 'items-center', 'justify-center', 'p-6')}>
-        <div className={cn('flex', 'items-center', 'gap-3')}>
-          <div className={cn('h-5', 'w-5', 'animate-spin', 'rounded-full', 'border-2', 'border-primary', 'border-t-transparent')} />
-          <p className={cn('text-sm', 'text-muted-foreground')}>
+      <main
+        className={cn(
+          "flex",
+          "min-h-screen",
+          "items-center",
+          "justify-center",
+          "p-6"
+        )}
+      >
+        <div className={cn("flex", "items-center", "gap-3")}>
+          <div
+            className={cn(
+              "h-5",
+              "w-5",
+              "animate-spin",
+              "rounded-full",
+              "border-2",
+              "border-primary",
+              "border-t-transparent"
+            )}
+          />
+
+          <p
+            className={cn(
+              "text-sm",
+              "text-muted-foreground"
+            )}
+          >
             Loading your workspace...
           </p>
         </div>
@@ -32,27 +54,42 @@ export default function DashboardPage() {
     );
   }
 
+  // Not authenticated
   if (!session) {
     return (
-      <main className={cn('flex', 'min-h-screen', 'items-center', 'justify-center', 'p-6')}>
-        <Card className={cn('w-full', 'max-w-md')}>
+      <main
+        className={cn(
+          "flex",
+          "min-h-screen",
+          "items-center",
+          "justify-center",
+          "p-6"
+        )}
+      >
+        <Card className={cn("w-full", "max-w-md")}>
           <CardHeader>
-            <CardTitle>Authentication required</CardTitle>
+            <CardTitle>
+              Authentication required
+            </CardTitle>
           </CardHeader>
 
           <CardContent>
-            <p className={cn('text-sm', 'text-muted-foreground')}>
-              You need to sign in before accessing your ARC
-              workspace.
+            <p
+              className={cn(
+                "text-sm",
+                "text-muted-foreground"
+              )}
+            >
+              You need to sign in before accessing your
+              ARC workspace.
             </p>
 
             <Button
-              className={cn('mt-6', 'w-full')}
-              onClick={() => {
-                window.location.href = "/sign-in";
-              }}
+              className={cn("mt-6", "w-full")}
             >
-              Go to Sign In
+              <Link href="/sign-in">
+                Go to Sign In
+              </Link>
             </Button>
           </CardContent>
         </Card>
@@ -60,50 +97,68 @@ export default function DashboardPage() {
     );
   }
 
+  // Authenticated dashboard
   return (
-    <main className={cn('min-h-screen', 'bg-muted/30')}>
-      {/* Header */}
-      <header className={cn('border-b', 'bg-background')}>
-        <div className={cn('mx-auto', 'flex', 'h-16', 'max-w-6xl', 'items-center', 'justify-between', 'px-6')}>
-          <div>
-            <h1 className={cn('text-xl', 'font-bold', 'tracking-tight')}>
-              ARC
-            </h1>
+    <main
+      className={cn(
+        "min-h-screen",
+        "bg-muted/30"
+      )}
+    >
+      {/* Dashboard Navbar */}
+      <DashboardNavbar />
 
-            <p className={cn('text-xs', 'text-muted-foreground')}>
-              AI Command Line Assistant
-            </p>
-          </div>
-
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-          >
-            Sign out
-          </Button>
-        </div>
-      </header>
-
-      {/* Dashboard */}
-      <div className={cn('mx-auto', 'max-w-6xl', 'px-6', 'py-10')}>
+      {/* Dashboard Content */}
+      <div
+        className={cn(
+          "mx-auto",
+          "max-w-6xl",
+          "px-6",
+          "py-10"
+        )}
+      >
         {/* Welcome */}
-        <div className="mb-10">
-          <p className={cn('text-sm', 'text-muted-foreground')}>
+        <div className={cn("mb-10")}>
+          <p
+            className={cn(
+              "text-sm",
+              "text-muted-foreground"
+            )}
+          >
             Dashboard
           </p>
 
-          <h2 className={cn('mt-2', 'text-3xl', 'font-bold', 'tracking-tight')}>
-            Welcome back, {session.user.name || "User"}
-          </h2>
+          <h1
+            className={cn(
+              "mt-2",
+              "text-3xl",
+              "font-bold",
+              "tracking-tight"
+            )}
+          >
+            Welcome back,{" "}
+            {session.user.name || "User"}
+          </h1>
 
-          <p className={cn('mt-2', 'text-muted-foreground')}>
+          <p
+            className={cn(
+              "mt-2",
+              "text-muted-foreground"
+            )}
+          >
             Your ARC workspace is ready.
           </p>
         </div>
 
-        {/* Overview cards */}
-        <div className={cn('grid', 'gap-6', 'md:grid-cols-3')}>
-          {/* User */}
+        {/* Overview Cards */}
+        <div
+          className={cn(
+            "grid",
+            "gap-6",
+            "md:grid-cols-3"
+          )}
+        >
+          {/* Account */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
@@ -112,15 +167,41 @@ export default function DashboardPage() {
             </CardHeader>
 
             <CardContent>
-              <div className={cn('flex', 'items-center', 'gap-4')}>
+              <div
+                className={cn(
+                  "flex",
+                  "items-center",
+                  "gap-4"
+                )}
+              >
                 {session.user.image ? (
                   <img
                     src={session.user.image}
-                    alt={session.user.name || "User"}
-                    className={cn('h-14', 'w-14', 'rounded-full', 'object-cover')}
+                    alt={
+                      session.user.name || "User"
+                    }
+                    className={cn(
+                      "h-14",
+                      "w-14",
+                      "rounded-full",
+                      "object-cover"
+                    )}
                   />
                 ) : (
-                  <div className={cn('flex', 'h-14', 'w-14', 'items-center', 'justify-center', 'rounded-full', 'bg-primary', 'text-lg', 'font-semibold', 'text-primary-foreground')}>
+                  <div
+                    className={cn(
+                      "flex",
+                      "h-14",
+                      "w-14",
+                      "items-center",
+                      "justify-center",
+                      "rounded-full",
+                      "bg-primary",
+                      "text-lg",
+                      "font-semibold",
+                      "text-primary-foreground"
+                    )}
+                  >
                     {session.user.name
                       ?.charAt(0)
                       .toUpperCase() || "U"}
@@ -128,11 +209,23 @@ export default function DashboardPage() {
                 )}
 
                 <div className="min-w-0">
-                  <p className={cn('truncate', 'font-medium')}>
-                    {session.user.name || "User"}
+                  <p
+                    className={cn(
+                      "truncate",
+                      "font-medium"
+                    )}
+                  >
+                    {session.user.name ||
+                      "User"}
                   </p>
 
-                  <p className={cn('truncate', 'text-sm', 'text-muted-foreground')}>
+                  <p
+                    className={cn(
+                      "truncate",
+                      "text-sm",
+                      "text-muted-foreground"
+                    )}
+                  >
                     {session.user.email}
                   </p>
                 </div>
@@ -149,24 +242,61 @@ export default function DashboardPage() {
             </CardHeader>
 
             <CardContent>
-              <div className={cn('flex', 'items-center', 'justify-between')}>
-                <span className={cn('text-sm', 'text-muted-foreground')}>
+              <div
+                className={cn(
+                  "flex",
+                  "items-center",
+                  "justify-between"
+                )}
+              >
+                <span
+                  className={cn(
+                    "text-sm",
+                    "text-muted-foreground"
+                  )}
+                >
                   Status
                 </span>
 
-                <span className={cn('rounded-full', 'bg-green-100', 'px-3', 'py-1', 'text-xs', 'font-medium', 'text-green-700')}>
+                <span
+                  className={cn(
+                    "rounded-full",
+                    "bg-green-100",
+                    "px-3",
+                    "py-1",
+                    "text-xs",
+                    "font-medium",
+                    "text-green-700"
+                  )}
+                >
                   Authenticated
                 </span>
               </div>
 
               <Separator className="my-4" />
 
-              <div className={cn('flex', 'items-center', 'justify-between')}>
-                <span className={cn('text-sm', 'text-muted-foreground')}>
+              <div
+                className={cn(
+                  "flex",
+                  "items-center",
+                  "justify-between"
+                )}
+              >
+                <span
+                  className={cn(
+                    "text-sm",
+                    "text-muted-foreground"
+                  )}
+                >
                   Email
                 </span>
 
-                <span className={cn('text-sm', 'font-medium')}>
+                <span
+                  className={cn(
+                    "text-sm",
+                    "font-medium"
+                  )}
+                >
                   {session.user.emailVerified
                     ? "Verified"
                     : "Unverified"}
@@ -175,7 +305,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* ARC */}
+          {/* ARC Workspace */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
@@ -184,62 +314,120 @@ export default function DashboardPage() {
             </CardHeader>
 
             <CardContent>
-              <p className={cn('text-sm', 'text-muted-foreground')}>
-                Your AI command-line workspace is ready to
-                use.
+              <p
+                className={cn(
+                  "text-sm",
+                  "text-muted-foreground"
+                )}
+              >
+                Your AI command-line workspace is
+                ready to use.
               </p>
 
-              <Button className={cn('mt-4', 'w-full')}>
+              <Button
+                className={cn("mt-4", "w-full")}
+              >
                 Open ARC
               </Button>
             </CardContent>
           </Card>
         </div>
 
-        {/* Profile information */}
+        {/* Profile Information */}
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Profile information</CardTitle>
+            <CardTitle>
+              Profile information
+            </CardTitle>
           </CardHeader>
 
           <CardContent>
-            <div className={cn('grid', 'gap-6', 'md:grid-cols-2')}>
+            <div
+              className={cn(
+                "grid",
+                "gap-6",
+                "md:grid-cols-2"
+              )}
+            >
               <div>
-                <p className={cn('text-sm', 'text-muted-foreground')}>
+                <p
+                  className={cn(
+                    "text-sm",
+                    "text-muted-foreground"
+                  )}
+                >
                   Name
                 </p>
 
-                <p className={cn('mt-1', 'font-medium')}>
-                  {session.user.name || "Not provided"}
+                <p
+                  className={cn(
+                    "mt-1",
+                    "font-medium"
+                  )}
+                >
+                  {session.user.name ||
+                    "Not provided"}
                 </p>
               </div>
 
               <div>
-                <p className={cn('text-sm', 'text-muted-foreground')}>
+                <p
+                  className={cn(
+                    "text-sm",
+                    "text-muted-foreground"
+                  )}
+                >
                   Email
                 </p>
 
-                <p className={cn('mt-1', 'font-medium')}>
+                <p
+                  className={cn(
+                    "mt-1",
+                    "font-medium"
+                  )}
+                >
                   {session.user.email}
                 </p>
               </div>
 
               <div>
-                <p className={cn('text-sm', 'text-muted-foreground')}>
+                <p
+                  className={cn(
+                    "text-sm",
+                    "text-muted-foreground"
+                  )}
+                >
                   User ID
                 </p>
 
-                <p className={cn('mt-1', 'break-all', 'font-mono', 'text-sm')}>
+                <p
+                  className={cn(
+                    "mt-1",
+                    "break-all",
+                    "font-mono",
+                    "text-sm"
+                  )}
+                >
                   {session.user.id}
                 </p>
               </div>
 
               <div>
-                <p className={cn('text-sm', 'text-muted-foreground')}>
+                <p
+                  className={cn(
+                    "text-sm",
+                    "text-muted-foreground"
+                  )}
+                >
                   Account status
                 </p>
 
-                <p className={cn('mt-1', 'font-medium')}>
+                <p
+                  className={cn(
+                    "mt-1",
+                    "font-medium"
+                  )}
+                >
                   Active
                 </p>
               </div>
@@ -247,18 +435,33 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Quick actions */}
-        <div className={cn('mt-6', 'grid', 'gap-6', 'md:grid-cols-2')}>
+        {/* Quick Actions */}
+        <div
+          className={cn(
+            "mt-6",
+            "grid",
+            "gap-6",
+            "md:grid-cols-2"
+          )}
+        >
+          {/* Quick Start */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick start</CardTitle>
+              <CardTitle>
+                Quick start
+              </CardTitle>
             </CardHeader>
 
             <CardContent>
-              <p className={cn('text-sm', 'text-muted-foreground')}>
-                Start using ARC from your terminal and connect
-                your development workflow with your AI
-                assistant.
+              <p
+                className={cn(
+                  "text-sm",
+                  "text-muted-foreground"
+                )}
+              >
+                Start using ARC from your terminal
+                and connect your development
+                workflow with your AI assistant.
               </p>
 
               <Button className="mt-4">
@@ -267,23 +470,33 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
+          {/* Documentation */}
           <Card>
             <CardHeader>
-              <CardTitle>Account actions</CardTitle>
+              <CardTitle>
+                Documentation
+              </CardTitle>
             </CardHeader>
 
             <CardContent>
-              <p className={cn('text-sm', 'text-muted-foreground')}>
-                Manage your current ARC authentication
-                session.
+              <p
+                className={cn(
+                  "text-sm",
+                  "text-muted-foreground"
+                )}
+              >
+                Learn how to install, configure,
+                and use ARC in your development
+                workflow.
               </p>
 
               <Button
-                variant="destructive"
+                variant="outline"
                 className="mt-4"
-                onClick={handleLogout}
               >
-                Sign out
+                <Link href="/docs">
+                  View Documentation
+                </Link>
               </Button>
             </CardContent>
           </Card>
