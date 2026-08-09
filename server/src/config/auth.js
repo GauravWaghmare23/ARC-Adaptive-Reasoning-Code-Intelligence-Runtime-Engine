@@ -11,10 +11,11 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  plugins:[
+  plugins: [
     deviceAuthorization({
+      verificationUri: "/device",
       expiresIn: "30m",
-      interval:"5s"
+      interval: "5s",
     })
   ],
 

@@ -3,8 +3,14 @@
 import { useState } from "react";
 import { authClient } from "@/lib/authClient";
 import { cn } from "../lib/utils";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export const LoginForm = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const redirect = searchParams.get("redirect");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -37,7 +43,8 @@ export const LoginForm = () => {
         return;
       }
 
-      window.location.href = "/dashboard";
+      router.replace(redirect || "/dashboard");
+      
     } catch (error) {
       console.error("Email login failed:", error);
       setError("Failed to login. Please try again.");
