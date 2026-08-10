@@ -6,6 +6,7 @@ import chalk from "chalk";
 import figlet from "figlet";
 import { Command } from "commander";
 import { login, logout, whoami } from "./commands/auth/login.js";
+import { wakeup } from "./commands/ai/wakeup.js";
 
 async function main() {
   // --------------------------------------------------
@@ -76,6 +77,7 @@ async function main() {
     .addCommand(login)
     .addCommand(logout)
     .addCommand(whoami)
+    .addCommand(wakeup)
 
   program.parse();
 }
