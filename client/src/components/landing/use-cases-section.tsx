@@ -1,4 +1,6 @@
 import { cn } from "../../lib/utils";
+import { GlobalFX, GlowOrbs, Reveal, CopyButton } from "./fx";
+
 interface UseCase {
   title: string;
   description: string;
@@ -46,10 +48,13 @@ const useCases: UseCase[] = [
 
 export function UseCasesSection() {
   return (
-    <section className={cn('border-t', 'px-6', 'py-24', 'md:py-32')}>
+    <section className={cn('relative', 'border-t', 'px-6', 'py-24', 'md:py-32')}>
+      <GlobalFX />
+      <GlowOrbs variant="section" />
+
       <div className={cn('mx-auto', 'max-w-6xl')}>
         {/* Section heading */}
-        <div className="max-w-2xl">
+        <Reveal className="max-w-2xl">
           <p className={cn('text-sm', 'font-medium', 'text-primary')}>
             USE CASES
           </p>
@@ -63,17 +68,14 @@ export function UseCasesSection() {
             debugging and automation, ARC helps you get more
             done from the terminal.
           </p>
-        </div>
+        </Reveal>
 
         {/* Use cases */}
         <div className={cn('mt-12', 'grid', 'gap-5', 'md:grid-cols-2', 'lg:grid-cols-3')}>
-          {useCases.map((useCase) => (
-            <UseCaseCard
-              key={useCase.title}
-              title={useCase.title}
-              description={useCase.description}
-              command={useCase.command}
-            />
+          {useCases.map((useCase, i) => (
+            <Reveal key={useCase.title} delay={i * 60}>
+              <UseCaseCard {...useCase} />
+            </Reveal>
           ))}
         </div>
       </div>
@@ -87,13 +89,14 @@ interface UseCaseCardProps {
   command: string;
 }
 
-function UseCaseCard({
-  title,
-  description,
-  command,
-}: UseCaseCardProps) {
+function UseCaseCard({ title, description, command }: UseCaseCardProps) {
   return (
-    <div className={cn('flex', 'flex-col', 'rounded-xl', 'border', 'p-6')}>
+    <div
+      className={cn(
+        'group flex h-full flex-col rounded-xl border p-6',
+        'transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/[0.06]'
+      )}
+    >
       <h3 className={cn('text-lg', 'font-semibold', 'tracking-tight')}>
         {title}
       </h3>
@@ -102,12 +105,22 @@ function UseCaseCard({
         {description}
       </p>
 
-      <div className={cn('mt-6', 'overflow-x-auto', 'rounded-lg', 'border', 'bg-muted/50', 'px-4', 'py-3', 'font-mono', 'text-sm')}>
-        <span className={cn('mr-2', 'text-muted-foreground')}>
+      <div
+        className={cn(
+          'mt-6 flex items-center overflow-x-auto rounded-lg border bg-muted/50 py-3 pl-4 pr-1.5 font-mono text-sm',
+          'transition-colors duration-300 group-hover:bg-muted/70'
+        )}
+      >
+        <span className={cn('mr-2', 'text-emerald-600')}>
           $
         </span>
 
-        {command}
+        <span className={cn('flex-1', 'whitespace-nowrap')}>{command}</span>
+
+        <CopyButton
+          value={command}
+          className={cn('text-muted-foreground/60', 'hover:bg-foreground/5', 'hover:text-foreground')}
+        />
       </div>
     </div>
   );

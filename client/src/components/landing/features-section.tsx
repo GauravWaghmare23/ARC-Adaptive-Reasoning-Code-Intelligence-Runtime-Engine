@@ -1,36 +1,54 @@
+import {
+  Bug,
+  Compass,
+  Sparkles,
+  Terminal,
+  Workflow,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "../../lib/utils";
+import { GlobalFX, GlowOrbs, Reveal } from "./fx";
+
 interface Feature {
+  icon: LucideIcon;
   title: string;
   description: string;
 }
 
 const features: Feature[] = [
   {
+    icon: Compass,
     title: "Understand your code",
     description:
       "Ask ARC to explain files, functions, modules, and unfamiliar parts of your codebase without leaving the terminal.",
   },
   {
+    icon: Bug,
     title: "Debug faster",
     description:
       "Investigate errors, understand stack traces, and get practical suggestions while working directly in your development environment.",
   },
   {
+    icon: Terminal,
     title: "Explore your codebase",
     description:
       "Navigate and understand large projects faster by asking questions about your files, architecture, and dependencies.",
   },
   {
+    icon: Workflow,
     title: "Automate workflows",
     description:
       "Turn repetitive development tasks into reusable commands and let ARC handle the routine work.",
   },
   {
+    icon: Sparkles,
     title: "AI-powered assistance",
     description:
       "Get contextual AI assistance designed specifically for software development and command-line workflows.",
   },
   {
+    icon: Zap,
     title: "Stay in your terminal",
     description:
       "No constant context switching between your editor, browser, documentation, and AI tools. Keep your workflow focused.",
@@ -39,10 +57,13 @@ const features: Feature[] = [
 
 export function FeaturesSection() {
   return (
-    <section className={cn('border-t', 'px-6', 'py-24', 'md:py-32')}>
+    <section className={cn('relative', 'border-t', 'px-6', 'py-24', 'md:py-32')}>
+      <GlobalFX />
+      <GlowOrbs variant="section" />
+
       <div className={cn('mx-auto', 'max-w-6xl')}>
         {/* Section heading */}
-        <div className="max-w-2xl">
+        <Reveal className="max-w-2xl">
           <p className={cn('text-sm', 'font-medium', 'text-primary')}>
             BUILT FOR DEVELOPERS
           </p>
@@ -55,16 +76,14 @@ export function FeaturesSection() {
             ARC brings practical AI capabilities directly into
             your command-line workflow.
           </p>
-        </div>
+        </Reveal>
 
         {/* Feature grid */}
         <div className={cn('mt-12', 'grid', 'gap-5', 'md:grid-cols-2', 'lg:grid-cols-3')}>
-          {features.map((feature) => (
-            <FeatureCard
-              key={feature.title}
-              title={feature.title}
-              description={feature.description}
-            />
+          {features.map((feature, i) => (
+            <Reveal key={feature.title} delay={i * 60}>
+              <FeatureCard {...feature} />
+            </Reveal>
           ))}
         </div>
       </div>
@@ -73,21 +92,38 @@ export function FeaturesSection() {
 }
 
 interface FeatureCardProps {
+  icon: LucideIcon;
   title: string;
   description: string;
 }
 
-function FeatureCard({
-  title,
-  description,
-}: FeatureCardProps) {
+function FeatureCard({ icon: Icon, title, description }: FeatureCardProps) {
   return (
-    <div className={cn('rounded-xl', 'border', 'p-6', 'transition-colors', 'hover:bg-muted/50')}>
-      <h3 className={cn('font-semibold', 'tracking-tight')}>
+    <div
+      className={cn(
+        'group relative h-full overflow-hidden rounded-xl border p-6',
+        'transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/[0.06]'
+      )}
+    >
+      <div
+        aria-hidden
+        className={cn('pointer-events-none', 'absolute', 'inset-0', 'bg-gradient-to-br', 'from-emerald-500/[0.04]', 'to-transparent', 'opacity-0', 'transition-opacity', 'duration-300', 'group-hover:opacity-100')}
+      />
+
+      <div
+        className={cn(
+          'relative inline-flex h-10 w-10 items-center justify-center rounded-lg border bg-muted/50 text-foreground',
+          'transition-colors duration-300 group-hover:border-emerald-500/30 group-hover:bg-emerald-500/10 group-hover:text-emerald-600'
+        )}
+      >
+        <Icon className={cn('h-5', 'w-5')} strokeWidth={1.75} />
+      </div>
+
+      <h3 className={cn('relative', 'mt-5', 'font-semibold', 'tracking-tight')}>
         {title}
       </h3>
 
-      <p className={cn('mt-2', 'text-sm', 'leading-6', 'text-muted-foreground')}>
+      <p className={cn('relative', 'mt-2', 'text-sm', 'leading-6', 'text-muted-foreground')}>
         {description}
       </p>
     </div>
