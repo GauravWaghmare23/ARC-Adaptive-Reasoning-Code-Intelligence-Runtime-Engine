@@ -22,20 +22,20 @@ async function main() {
   // Colors
   // --------------------------------------------------
 
-  const green = chalk.hex("#39FF14");
-  const lime = chalk.hex("#B6FF00");
-  const yellow = chalk.hex("#FFE600");
-  const orange = chalk.hex("#FF9F00");
-  const white = chalk.hex("#FFFFFF");
-  const gray = chalk.hex("#D4D4D4");
+  const accent = chalk.hex("#22C55E");
+  const white = chalk.white;
+  const secondary = chalk.gray;
+  const muted = chalk.dim.gray;
 
   // --------------------------------------------------
   // Display ARC banner
   // --------------------------------------------------
 
   if (showBanner) {
+    console.log();
+
     console.log(
-      green(
+      accent(
         figlet.textSync("ARC Mark I", {
           font: "Standard",
           horizontalLayout: "default",
@@ -44,22 +44,23 @@ async function main() {
       )
     );
 
-    // Product description
     console.log(
-      `  ${green("AI-Powered")} ${lime("Developer")} ${yellow(
-        "Assistant"
+      `  ${white("AI-powered developer assistant")}  ${muted("· v0.1.0")}`
+    );
+
+    console.log(
+      `  ${secondary(
+        "Understand code, debug faster, and build smarter — right from your terminal."
       )}`
     );
 
-    console.log(
-      `  ${white("Understand code.")} ${orange(
-        "Debug faster."
-      )} ${yellow("Build smarter.")}`
-    );
+    console.log();
+    console.log(muted(`  ${"─".repeat(54)}`));
+    console.log();
 
-    console.log(
-      `  ${gray("Your intelligent command-line companion.")}`
-    );
+    console.log(`  ${secondary("Get started")}     ${white("arc login")}`);
+    console.log(`  ${secondary("Start chatting")}  ${white("arc wakeup")}`);
+    console.log(`  ${secondary("All commands")}    ${white("arc --help")}`);
 
     console.log();
   }
@@ -84,6 +85,9 @@ async function main() {
 
 
 main().catch((error) => {
-    console.error("Error running arc cli:", error)
+    console.log();
+    console.log(chalk.red("  ✕ Error running arc cli"));
+    console.log(chalk.dim(`    ${error?.message || error}`));
+    console.log();
     process.exit(1)
 });

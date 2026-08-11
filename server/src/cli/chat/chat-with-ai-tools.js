@@ -1,6 +1,13 @@
 import chalk from "chalk";
-import { intro, outro, text, isCancel } from "@clack/prompts";
 import boxen from "boxen";
+import {
+    text,
+    isCancel,
+    cancel,
+    intro,
+    outro,
+    multiselect
+} from "@clack/prompts";
 import ora from "ora";
 import { marked } from "marked";
 import { markedTerminal } from "marked-terminal";
@@ -8,91 +15,72 @@ import { AIService } from "../ai/google-service.js";
 import { ChatService } from "../../service/chat.service.js";
 import { getStoredToken } from "../../config/token.js";
 import { prisma } from "../../config/database.js";
+import {
+    availableTools,
+    getEnabledTools,
+    enableTools,
+    getEnabledToolNames,
+    resetTools
+} from "../../config/tool.config.js";
 
-
-
-
-const accent = chalk.hex("#34D399");   // emerald — brand / assistant
-const user = chalk.hex("#38BDF8");     // sky — user
-const violet = chalk.hex("#A78BFA");   // headings, visual hierarchy
-const amber = chalk.hex("#FBBF24");    // warnings
-const rose = chalk.hex("#F87171");     // errors
-const secondary = chalk.gray;
-const muted = chalk.dim;
-
-
-
-function terminalWidth() {
-    const cols = process.stdout.columns || 100;
-    return Math.max(40, Math.min(cols - 8, 92));
-}
-
-function hr() {
-    return muted(`  ${"─".repeat(terminalWidth())}`);
-}
 
 marked.use(
     markedTerminal({
-        width: terminalWidth(),
-        reflowText: true,
-        tab: 2,
+        // Styling options for terminal output
         code: chalk.cyan,
-        blockquote: muted.italic,
-        heading: violet.bold,
-        firstHeading: violet.bold.underline,
-        hr: muted,
+        blockquote: chalk.gray.italic,
+        heading: chalk.green.bold,
+        firstHeading: chalk.hex("#22C55E").bold,
+        hr: chalk.dim,
         listitem: chalk.reset,
         list: chalk.reset,
         paragraph: chalk.reset,
-        strong: chalk.bold.white,
+        strong: chalk.bold,
         em: chalk.italic,
         codespan: chalk.cyan,
-        del: muted.strikethrough,
+        del: chalk.dim.gray.strikethrough,
         link: chalk.cyan.underline,
         href: chalk.cyan.underline,
     })
 );
 
-const aiService = new AIService();
 const chatService = new ChatService();
+const aiService = new AIService();
 
 
+// --------------------------------------------------
+// CLI Theme
+// --------------------------------------------------
 
+const accent = chalk.hex("#22C55E");
+const secondary = chalk.gray;
+const muted = chalk.dim;
 
-function withBar(content) {
-    const bar = muted("│");
+const divider = () => muted(`  ${"─".repeat(54)}`);
 
-    return content
+function indentBlock(text, spaces = 4) {
+    const pad = " ".repeat(spaces);
+
+    return text
         .split("\n")
-        .map((line) => (line.length ? `  ${bar} ${line}` : `  ${bar}`))
+        .map((line) => (line.length ? pad + line : line))
         .join("\n");
 }
 
-function renderMarkdown(raw) {
-    let out = marked.parse(raw).trim();
-
-    out = out
-        .replace(/^ {0,3}#{1,6}\s+/gm, "")
-        .replace(/\*\*(.+?)\*\*/g, (_, s) => chalk.bold(s))
-        .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, (_, pre, s) => `${pre}${chalk.italic(s)}`);
-
-    return out;
-}
-
-const roleStyle = {
-    user: { label: "You", color: user, icon: "◆" },
-    assistant: { label: "Assistant", color: accent, icon: "◇" },
-};
-
-function renderMessage(role, content) {
-    const style = roleStyle[role] ?? roleStyle.assistant;
-    const body = role === "assistant" ? renderMarkdown(content) : content;
-
+function renderUserMessage(content) {
     console.log();
-    console.log(`  ${style.color(style.icon)} ${chalk.bold(style.label)}`);
-    console.log(withBar(body));
+    console.log(`  ${chalk.cyan("›")} ${chalk.bold("You")}`);
+    console.log(indentBlock(content));
 }
 
+function renderAssistantMessage(content) {
+    console.log();
+    console.log(`  ${accent("›")} ${chalk.bold("Assistant")}`);
+
+    const rendered = marked.parse(content).trim();
+
+    console.log(indentBlock(rendered));
+}
 
 
 async function getUserFromToken() {
@@ -110,7 +98,7 @@ async function getUserFromToken() {
     }).start();
 
     try {
-        const foundUser = await prisma.user.findFirst({
+        const user = await prisma.user.findFirst({
             where: {
                 sessions: {
                     some: {
@@ -120,7 +108,7 @@ async function getUserFromToken() {
             },
         });
 
-        if (!foundUser) {
+        if (!user) {
             spinner.fail("Authentication failed");
 
             throw new Error(
@@ -128,9 +116,9 @@ async function getUserFromToken() {
             );
         }
 
-        spinner.succeed(`Welcome back, ${chalk.bold(foundUser.name)}`);
+        spinner.succeed(`Welcome back, ${chalk.bold(user.name)}`);
 
-        return foundUser;
+        return user;
     } catch (error) {
         if (spinner.isSpinning) {
             spinner.fail("Authentication failed");
@@ -142,118 +130,108 @@ async function getUserFromToken() {
 
 
 
-export async function initConversation(
-    userId,
-    conversationId = null,
-    mode = "chat"
-) {
+async function selectTools() {
+
+    const toolOptions = availableTools.map(tool => ({
+        value: tool.id,
+        label: tool.name,
+        hint: tool.description
+    }));
+
+    const selectedTools = await multiselect({
+        message: "Select tools to enable",
+        options: toolOptions,
+        required: false,
+    });
+
+    if (isCancel(selectedTools)) {
+        cancel("Tool selection cancelled");
+        process.exit(0);
+    }
+
+    enableTools(selectedTools);
+
+    console.log();
+
+    if (selectedTools.length === 0) {
+        console.log(
+            `  ${muted("No tools enabled — the AI will respond without tool access.")}`
+        );
+    } else {
+        console.log(`  ${chalk.bold("Enabled tools")}`);
+
+        selectedTools.forEach((id) => {
+            const tool = availableTools.find(
+                (t) => t.id === id
+            );
+
+            console.log(`  ${accent("✓")} ${tool.name}`);
+        });
+    }
+
+    console.log();
+
+    return selectedTools.length > 0
+
+}
+
+
+async function initConversation(userId, conversationId = null, mode = "tool") {
+
     const spinner = ora({
         text: secondary("Loading conversation..."),
         spinner: "dots",
     }).start();
 
-    const conversation =
-        await chatService.getOrCreateConversation(
-            userId,
-            conversationId,
-            mode
-        );
+    const conversation = await chatService.getOrCreateConversation(
+        userId,
+        conversationId,
+        mode
+    );
 
     spinner.succeed("Conversation loaded");
 
+    const enabledToolNames = getEnabledToolNames();
 
     console.log();
-    console.log(`  ${accent("●")} ${chalk.bold(conversation.title)}`);
+    console.log(`  ${chalk.bold(conversation.title)}`);
     console.log(
-        `  ${muted(conversation.id)}  ${muted("·")}  ${muted(`mode: ${conversation.mode}`)}`
+        `  ${muted(`id ${conversation.id}`)}  ${muted("·")}  ${muted(
+            `mode ${conversation.mode}`
+        )}`
     );
-    console.log(hr());
+    console.log(
+        `  ${muted(
+            enabledToolNames.length > 0
+                ? `tools ${enabledToolNames.join(", ")}`
+                : "tools none"
+        )}`
+    );
+    console.log(divider());
 
     if (conversation.messages?.length > 0) {
         displayMessages(conversation.messages);
     }
 
     return conversation;
+
 }
+
 
 
 
 function displayMessages(messages) {
     messages.forEach((msg) => {
-        renderMessage(msg.role, msg.content);
+        if (msg.role === "user") {
+            renderUserMessage(msg.content);
+        } else {
+            renderAssistantMessage(msg.content);
+        }
     });
 
     console.log();
-    console.log(hr());
+    console.log(divider());
 }
-
-
-
-async function saveMessage(
-    conversationId,
-    role,
-    content
-) {
-    return await chatService.addMessage(
-        conversationId,
-        role,
-        content
-    );
-}
-
-
-
-async function getAIResponse(conversationId) {
-    const spinner = ora({
-        text: secondary("Thinking..."),
-        spinner: "dots",
-        color: "green",
-    }).start();
-
-    const dbMessages =
-        await chatService.getMessages(conversationId);
-
-    const aiMessages =
-        chatService.formatMessagesForAI(dbMessages);
-
-    let fullResponse = "";
-    let isFirstChunk = true;
-
-    try {
-        const result = await aiService.sendMessage(
-            aiMessages,
-            (chunk) => {
-                if (isFirstChunk) {
-                    spinner.stop();
-
-                    console.log();
-                    console.log(
-                        `  ${accent("◇")} ${chalk.bold("Assistant")}`
-                    );
-
-                    isFirstChunk = false;
-                }
-
-                fullResponse += chunk;
-            }
-        );
-
-        console.log(withBar(renderMarkdown(fullResponse)));
-
-        console.log();
-        console.log(hr());
-        console.log();
-
-        return result.content;
-    } catch (error) {
-        spinner.fail(
-            "Failed to get response from AI"
-        );
-
-        throw error;
-    }
-}
-
 
 
 async function updateConversationTitle(
@@ -275,6 +253,81 @@ async function updateConversationTitle(
 
 
 
+async function saveMessage(
+    conversationId,
+    role,
+    content
+) {
+    return await chatService.addMessage(
+        conversationId,
+        role,
+        content
+    );
+}
+
+async function getAIResponse(conversationId) {
+    const spinner = ora({
+        text: secondary("Thinking..."),
+        spinner: "dots",
+        color: "green",
+    }).start();
+
+    const dbMessages =
+        await chatService.getMessages(conversationId);
+
+    const aiMessages =
+        chatService.formatMessagesForAI(dbMessages);
+
+    const tools = getEnabledTools();
+
+    let fullResponse = "";
+
+    let isFirstChunk = true;
+
+    try {
+        const result = await aiService.sendMessage(
+            aiMessages,
+            (chunk) => {
+                if (isFirstChunk) {
+                    spinner.stop();
+
+                    console.log();
+                    console.log(
+                        `  ${accent("›")} ${chalk.bold("Assistant")}`
+                    );
+
+                    isFirstChunk = false;
+                }
+
+                fullResponse += chunk;
+            },
+            tools
+        );
+
+        // Now render the complete markdown response
+        console.log();
+
+        const renderedMarkdown =
+            marked.parse(fullResponse).trim();
+
+        console.log(indentBlock(renderedMarkdown));
+
+        console.log();
+        console.log(divider());
+        console.log();
+
+        return result.content;
+    } catch (error) {
+        spinner.fail(
+            "Failed to get response from AI"
+        );
+
+        throw error;
+    }
+}
+
+
+
 function printExit() {
     console.log();
     console.log(
@@ -283,20 +336,26 @@ function printExit() {
     console.log();
 }
 
-
-
 async function chatLoop(conversation) {
+    const enabledToolNames = getEnabledToolNames();
+
     const helpRows = [
-        ["↵", "Send your message"],
+        ["Enter", "Send your message"],
+        [
+            "Tools",
+            enabledToolNames.length > 0
+                ? enabledToolNames.join(", ")
+                : "none enabled",
+        ],
         ["exit", "End the conversation"],
-        ["⌃C", "Quit anytime"],
+        ["Ctrl+C", "Quit anytime"],
     ];
 
     const helpBox = boxen(
         helpRows
             .map(
                 ([key, desc]) =>
-                    `${muted(key.padEnd(6))}${secondary(desc)}`
+                    `${muted(key.padEnd(8))}${secondary(desc)}`
             )
             .join("\n"),
         {
@@ -311,8 +370,9 @@ async function chatLoop(conversation) {
     console.log(helpBox);
 
     while (true) {
+
         const userInput = await text({
-            message: `${accent("❯")} Message`,
+            message: chalk.cyan("Message"),
             placeholder: "Type your message...",
             validate(value) {
                 if (
@@ -363,43 +423,45 @@ async function chatLoop(conversation) {
             userInput,
             messages.length
         );
+
+
     }
+
 }
 
 
 
-export async function startChat(
-    mode = "chat",
-    conversationId = null
-) {
+export async function startToolChat(conversationId = null) {
+
     try {
-        const modeLabel =
-            mode.charAt(0).toUpperCase() + mode.slice(1);
 
         intro(
-            `${accent("◆")} ${chalk.bold(`ARC ${modeLabel}`)}`
+            `${accent("◆")} ${chalk.bold("ARC · Tool Calling")}`
         );
 
-        const authedUser =
-            await getUserFromToken();
+        const user = await getUserFromToken();
 
-        const conversation =
-            await initConversation(
-                authedUser.id,
-                conversationId,
-                mode
-            );
+        await selectTools();
+
+        const conversation = await initConversation(user.id, conversationId, "tool");
 
         await chatLoop(conversation);
 
-        outro(secondary("Thanks for chatting"));
+        resetTools();
+
+        outro(secondary("Thanks for using tools"));
+
+
     } catch (error) {
+
         console.log();
         console.log(
-            `  ${rose("✕")} ${rose(error.message)}`
+            `  ${chalk.red("✕")} ${chalk.red(error.message)}`
         );
         console.log();
 
+        resetTools();
         process.exit(1);
+
     }
 }

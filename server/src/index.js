@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 8000;
 // CORS
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   })
@@ -24,16 +24,16 @@ app.all("/api/auth/{*any}", toNodeHandler(auth));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/api/me", async(req,res)=>{
+app.get("/api/me", async (req, res) => {
   const session = await auth.api.getSession({
     headers: fromNodeHeaders(req.headers),
   });
   return res.json(session);
 });
 
-app.get("/device", async(req,res)=>{
-  const {user_code} = req.query;
-  res.redirect(`http://localhost:3000/device?user_code=${user_code}`);
+app.get("/device", async (req, res) => {
+  const { user_code } = req.query;
+  res.redirect(`${process.env.FRONTEND_URL}/device?user_code=${user_code}`);
 })
 
 // Health check

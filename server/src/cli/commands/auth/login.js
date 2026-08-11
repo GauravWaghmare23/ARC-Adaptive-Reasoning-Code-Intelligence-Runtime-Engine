@@ -44,6 +44,7 @@ const colors = {
   primary: chalk.white,
   secondary: chalk.gray,
   muted: chalk.dim,
+  accent: chalk.hex("#22C55E"),
   success: chalk.green,
   warning: chalk.yellow,
   error: chalk.red,
@@ -142,7 +143,7 @@ export async function loginAction(opts) {
 
   const requestSpinner = ora({
     text: "Preparing device authorization",
-    color: "yellow",
+    color: "green",
   }).start();
 
   try {
@@ -219,7 +220,7 @@ export async function loginAction(opts) {
     if (openBrowser) {
       const browserSpinner = ora({
         text: "Opening authorization page",
-        color: "yellow",
+        color: "green",
       }).start();
 
       try {
@@ -275,7 +276,7 @@ export async function loginAction(opts) {
 
     const saveSpinner = ora({
       text: "Saving authentication",
-      color: "yellow",
+      color: "green",
     }).start();
 
     const saved = await storeToken(token);
@@ -356,7 +357,7 @@ async function pollForToken(
 
   const spinner = ora({
     text: "Waiting for authorization",
-    color: "yellow",
+    color: "green",
   });
 
   return new Promise((resolve, reject) => {
@@ -482,19 +483,19 @@ async function pollForToken(
 }
 
 export async function logoutAction() {
-  intro(chalk.bold("ARC Logout"));
+  intro(colors.bold("ARC Logout"));
 
   const token = await getStoredToken();
 
   if (!token) {
-    console.log(chalk.yellow("You are not logged in."));
+    console.log(colors.warning("⚠ You are not logged in."));
     process.exit(0);
   }
 
   const shouldLogout = await confirm({
-    message: chalk.bold(
-      `You are currently logged in as ${token.email}. Are you sure you want to logout?`
-    ),
+    message: `You are currently logged in as ${colors.bold(
+      token.email
+    )}. Are you sure you want to logout?`,
     initialValue: true,
   });
 
@@ -506,10 +507,10 @@ export async function logoutAction() {
   const cleared = await clearStoredToken();
 
   if (cleared) {
-    intro(chalk.green("Logged out successfully!"));
+    outro(`${colors.success("✓")} Logged out successfully`);
     process.exit(0);
   } else {
-    intro(chalk.red("Failed to logout."));
+    outro(colors.error("✕ Failed to logout."));
     process.exit(1);
   }
 }
@@ -518,7 +519,7 @@ export async function whoAmIAction() {
   const token = await requireAuth();
 
   if (!token?.access_token) {
-    console.log(chalk.red("You are not logged in."));
+    console.log(colors.error("✕ You are not logged in."));
     process.exit(1);
   }
 
@@ -539,14 +540,19 @@ export async function whoAmIAction() {
   });
 
   if (!user) {
-    console.log(chalk.red("Unable to find the authenticated user."));
+    console.log(colors.error("✕ Unable to find the authenticated user."));
     process.exit(1);
   }
 
-  console.log(chalk.bold("Who am I?"));
-  console.log(chalk.white(`Name: ${user.name}`));
-  console.log(chalk.white(`Email: ${user.email}`));
-  console.log(chalk.white(`ID: ${user.id}`));
+  console.log();
+  console.log(`  ${colors.bold("Signed in as")}`);
+  console.log();
+
+  printLabel("Name", user.name);
+  printLabel("Email", user.email);
+  printLabel("ID", user.id);
+
+  console.log();
 }
 
 

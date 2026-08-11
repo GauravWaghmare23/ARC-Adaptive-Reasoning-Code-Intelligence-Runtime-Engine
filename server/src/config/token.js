@@ -52,9 +52,10 @@ export async function storeToken(token) {
 
     return true;
   } catch (error) {
+    console.log();
     console.error(
-      chalk.red("Failed to store token:"),
-      error.message
+      chalk.red("  ✕ Failed to store token"),
+      chalk.dim(error.message)
     );
 
     return false;
@@ -90,20 +91,24 @@ export async function requireAuth() {
   const token = await getStoredToken();
 
   if (!token) {
+    console.log();
     console.log(
-      chalk.red("✕ Not authenticated. Please run 'arc login' first.")
+      chalk.red("  ✕ Not authenticated. Please run 'arc login' first.")
     );
+    console.log();
     process.exit(1);
   }
 
   if (await isTokenExpired()) {
+    console.log();
     console.log(
-      chalk.yellow("⚠ Your session has expired. Please login again.")
+      chalk.yellow("  ⚠ Your session has expired. Please login again.")
     );
 
     console.log(
-      chalk.gray("  Run: your-cli login\n")
+      chalk.dim("    Run: arc login")
     );
+    console.log();
 
     process.exit(1);
   }
