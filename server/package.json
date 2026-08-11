@@ -11,8 +11,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js",
-    "start": "node index.js"
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.39",
@@ -28,7 +28,7 @@
     "express": "^5.2.1",
     "figlet": "^1.11.4",
     "inquirer": "^14.0.2",
-    "marked": "^18.0.9",
+    "marked": "^15.0.12",
     "marked-terminal": "^7.3.0",
     "open": "^11.0.0",
     "ora": "^9.4.1",
