@@ -5,18 +5,33 @@ import { getStoredToken } from "../../../config/token.js";
 import { prisma } from "../../../config/database.js";
 import { select } from "@clack/prompts";
 import { startChat } from "../../chat/chat-with-ai.js";
+import { startToolChat } from "../../chat/chat-with-ai-tools.js";
+
+
+// --------------------------------------------------
+// CLI Theme
+// --------------------------------------------------
+
+const accent = chalk.hex("#22C55E");
+const white = chalk.white;
+const secondary = chalk.gray;
+const muted = chalk.dim;
+const error = chalk.red;
 
 
 const wakeupAction = async () => {
     const token = await getStoredToken();
 
     if (!token?.access_token) {
-        console.log(chalk.red("No Authenticated, Please login."));
+        console.log();
+        console.log(error("  ✕ Not authenticated."));
+        console.log(`  ${secondary("Run")} ${white("arc login")} ${secondary("first.")}`);
+        console.log();
         return;
     }
 
     const spinner = ora({
-        text: chalk.yellow("Fetching User Info..."),
+        text: secondary("Fetching your account..."),
         spinner: "line",
     }).start();
 
@@ -37,17 +52,18 @@ const wakeupAction = async () => {
     });
 
     if (!user) {
-        spinner.stop();
-        console.log(chalk.red("No user found, Please login first."));
+        spinner.fail("No authenticated user found");
+        console.log(`  ${secondary("Run")} ${white("arc login")} ${secondary("again.")}`);
+        console.log();
         return;
     }
 
-    spinner.stop();
+    spinner.succeed(`Welcome back, ${chalk.bold(user.name)}`);
 
-    console.log(chalk.green(`Welcome back, ${user.name}!\n`));
+    console.log();
 
     const choice = await select({
-        message: "Select an Option:",
+        message: "Select an option",
         options: [
             {
                 value: "chat",
@@ -62,7 +78,7 @@ const wakeupAction = async () => {
             {
                 value: "agent",
                 label: "Agentic Mode",
-                hint: "Advanced AI agent (Coming soon)",
+                hint: "Advanced AI agent — coming soon",
             },
         ],
     });
@@ -73,11 +89,13 @@ const wakeupAction = async () => {
             break;
 
         case "tool":
-            console.log(chalk.green("Tool calling is selected"));
+            await startToolChat();
             break;
 
         case "agent":
-            console.log(chalk.yellow("Agentic mode coming soon"));
+            console.log();
+            console.log(`  ${muted("Agentic mode is coming soon.")}`);
+            console.log();
             break;
     }
 }
@@ -86,4 +104,3 @@ const wakeupAction = async () => {
 export const wakeup = new Command("wakeup")
     .description("Wakeup ARC AI and start conversation.")
     .action(wakeupAction);
-    
