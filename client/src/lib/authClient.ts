@@ -3,7 +3,7 @@ import { deviceAuthorizationClient } from "better-auth/client/plugins";
 
 
 export const authClient = createAuthClient({
-    baseURL:"https://arc-x0es.onrender.com/",
+    baseURL:"http://localhost:4000/",
     plugins: [
         deviceAuthorizationClient(),
     ],

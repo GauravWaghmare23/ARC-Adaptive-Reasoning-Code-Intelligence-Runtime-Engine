@@ -3,6 +3,13 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Copy } from "lucide-react";
 import { cn } from "../../lib/utils";
+import type { JSX } from "react";
+
+type YourProps = {
+  delay?: number;
+  className?: string;
+  as?: keyof JSX.IntrinsicElements;
+};
 
 /**
  * Shared visual language for the ARC landing page.

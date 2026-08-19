@@ -67,7 +67,7 @@ export default function DeviceApprovePage() {
 
       if (error) {
         setError(
-          error.message || "Failed to authorize this device."
+          error.error_description || "Failed to authorize this device."
         );
         return;
       }
@@ -102,7 +102,7 @@ export default function DeviceApprovePage() {
 
       if (error) {
         setError(
-          error.message || "Failed to deny device authorization."
+          error.error_description || "Failed to deny device authorization."
         );
         return;
       }
